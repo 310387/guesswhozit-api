@@ -55,7 +55,8 @@ router.get("/stats", accessToken.validateToken, (req, res) => {
                 const winCount = result[0].win_count
                 const currentStreak = result[0].current_streak
                 const bestStreak =result[0].best_streak
-                res.json({stats: {category, user_id, playTime, guessCount, winCount, currentStreak, bestStreak}})
+                const gameCount = result[0].game_count
+                res.json({stats: {category, user_id, playTime, guessCount, winCount, currentStreak, bestStreak, gameCount}})
             }
             else {
                 console.log("--------> No stats found")
