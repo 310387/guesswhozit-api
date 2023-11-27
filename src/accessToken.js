@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken")
 
-function generateAccessToken(email, expires) {
-    return jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, { expiresIn: expires })
+function generateAccessToken(user, expires) {
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: expires })
 }
 
 function validateToken(req, res, next) {

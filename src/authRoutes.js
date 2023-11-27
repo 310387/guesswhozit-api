@@ -72,7 +72,7 @@ router.post("/login", (req, res) => {
                 if (await bcrypt.compare(password, hashedPassword)) {
                     console.log("---------> Login Successful")
                     console.log("---------> Generating accessToken")
-                    const token = accessToken.generateAccessToken({ email }, "7d")
+                    const token = accessToken.generateAccessToken({ email, id: result[0].id }, "7d")
                     console.log(token)
                     res.json({ user: { name: result[0].username, email: result[0].email }, accessToken: token })
                 }
@@ -100,7 +100,7 @@ router.post("/forgot-password", async (req, res) => {
                 res.status(404).send({ message: "User not found." })
             }
             else {
-                const token = accessToken.generateAccessToken({ email }, "1h")
+                const token = accessToken.generateAccessToken({ email, id: result[0].id }, "1h")
                 const resetLink = `${process.env.CLIENT_URL}/password-reset/${token}?email=${email}`
                 try {
                     const info = await transporter.sendForgotPasswordEmail(email, result[0].username, resetLink)
