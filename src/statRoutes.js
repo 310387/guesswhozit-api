@@ -35,7 +35,7 @@ function getDBName(category) {
 }
 
 router.get("/stats", accessToken.validateToken, (req, res) => {
-    if(!("category" in req.query)) return res.sendStatus(500)
+    if (!("category" in req.query)) return res.sendStatus(500)
     const category = req.query.category
     const user_id = req.user.id
     const dbName = getDBName(category)
@@ -54,9 +54,9 @@ router.get("/stats", accessToken.validateToken, (req, res) => {
                 const guessCount = result[0].guess_count
                 const winCount = result[0].win_count
                 const currentStreak = result[0].current_streak
-                const bestStreak =result[0].best_streak
+                const bestStreak = result[0].best_streak
                 const gameCount = result[0].game_count
-                res.json({stats: {category, user_id, playTime, guessCount, winCount, currentStreak, bestStreak, gameCount}})
+                res.json({ stats: { category, user_id, playTime, guessCount, winCount, currentStreak, bestStreak, gameCount } })
             }
             else {
                 console.log("--------> No stats found")
@@ -67,7 +67,7 @@ router.get("/stats", accessToken.validateToken, (req, res) => {
 })
 
 router.post("/stats", accessToken.validateToken, (req, res) => {
-    if(!("category" in req.body && 'duration' in req.body && 'guessNum' in req.body && 'isWin' in req.body)) res.sendStatus(500)
+    if (!("category" in req.body && 'duration' in req.body && 'guessNum' in req.body && 'isWin' in req.body)) res.sendStatus(500)
     const category = req.body.category
     const user_id = req.user.id
     const duration = req.body.duration
@@ -109,6 +109,32 @@ router.post("/stats", accessToken.validateToken, (req, res) => {
                     console.log(result.insertId)
                     res.sendStatus(201)
                 })
+            }
+        })
+    })
+})
+
+router.get("/leaderboard", (req, res) => {
+    if (!("category" in req.query) || !("type" in req.query)) return res.sendStatus(500)
+    const category = req.query.category
+    const type = req.query.type
+    const dbName = getDBName(category)
+    db.getConnection(async (err, connection) => {
+        if (err) throw (err)
+        const sqlSearch = "SELECT users.username, ??.?? FROM ?? INNER JOIN users WHERE ??.user_id = users.id AND ??.game_count > 10 ORDER BY ??.?? DESC LIMIT 5"
+        const search_query = mysql.format(sqlSearch, [dbName, type, dbName, dbName, dbName, dbName, type])
+
+        await connection.query(search_query, async (err, result) => {
+            connection.release()
+            if (err) throw (err)
+            console.log("------> Leaderboard Results")
+            console.log(result.length)
+            if (result.length != 0) {
+                res.json({ result })
+            }
+            else {
+                console.log("--------> No Avaiable Result")
+                res.sendStatus(404)
             }
         })
     })
