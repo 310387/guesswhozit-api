@@ -24,7 +24,6 @@ function sendForgotPasswordEmail(email, name, resetLink) {
         html: htmlToSend
     }
     return transporter.sendMail(data)
-
 }
 
 module.exports.sendForgotPasswordEmail = sendForgotPasswordEmail

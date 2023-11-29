@@ -40,13 +40,13 @@ router.get("/stats", accessToken.validateToken, (req, res) => {
     const user_id = req.user.id
     const dbName = getDBName(category)
     db.getConnection(async (err, connection) => {
-        if (err) throw (err)
+        if (err) return res.sendStatus(500)
         const sqlSearch = "SELECT * FROM ?? WHERE user_id = ?"
         const search_query = mysql.format(sqlSearch, [dbName, user_id])
 
         await connection.query(search_query, async (err, result) => {
             connection.release()
-            if (err) throw (err)
+            if (err) return res.sendStatus(500)
             console.log("------> Stats Search Results")
             console.log(result.length)
             if (result.length != 0) {
@@ -75,14 +75,14 @@ router.post("/stats", accessToken.validateToken, (req, res) => {
     const isWin = req.body.isWin
     const dbName = getDBName(category)
     db.getConnection(async (err, connection) => {
-        if (err) throw (err)
+        if (err) return res.sendStatus(500)
         const sqlSearch = "SELECT * FROM ?? WHERE user_id = ?"
         const search_query = mysql.format(sqlSearch, [dbName, user_id])
         const sqlInsert = "INSERT INTO ?? VALUES (0,?,?,?,1,?,?,?)"
         const insert_query = mysql.format(sqlInsert, [dbName, user_id, duration, guessNum, isWin ? 1 : 0, isWin ? 1 : 0, isWin ? 1 : 0])
 
         await connection.query(search_query, async (err, result) => {
-            if (err) throw (err)
+            if (err) return res.sendStatus(500)
             console.log("------> Stats Search Results")
             console.log(result.length)
             if (result.length != 0) {
@@ -95,7 +95,7 @@ router.post("/stats", accessToken.validateToken, (req, res) => {
                 const update_query = mysql.format(sqlUpdate, [dbName, updated_playTime, updated_guessCount, result[0].game_count + 1, updated_winCount, updated_currentStreak, updated_bestStreak])
                 await connection.query(update_query, (err, result) => {
                     connection.release()
-                    if (err) throw (err)
+                    if (err) return res.sendStatus(500)
                     console.log("--------> Updated stats record")
                     console.log(result.insertId)
                     res.send({ message: 'Stats updated' })
@@ -104,7 +104,7 @@ router.post("/stats", accessToken.validateToken, (req, res) => {
             else {
                 await connection.query(insert_query, (err, result) => {
                     connection.release()
-                    if (err) throw (err)
+                    if (err) return res.sendStatus(500)
                     console.log("--------> Created new stats record")
                     console.log(result.insertId)
                     res.sendStatus(201)
@@ -120,13 +120,13 @@ router.get("/leaderboard", (req, res) => {
     const type = req.query.type
     const dbName = getDBName(category)
     db.getConnection(async (err, connection) => {
-        if (err) throw (err)
+        if (err) return res.sendStatus(500)
         const sqlSearch = "SELECT users.username, ??.?? FROM ?? INNER JOIN users WHERE ??.user_id = users.id AND ??.game_count > 10 ORDER BY ??.?? DESC LIMIT 5"
         const search_query = mysql.format(sqlSearch, [dbName, type, dbName, dbName, dbName, dbName, type])
 
         await connection.query(search_query, async (err, result) => {
             connection.release()
-            if (err) throw (err)
+            if (err) return res.sendStatus(500)
             console.log("------> Leaderboard Results")
             console.log(result.length)
             if (result.length != 0) {
@@ -138,6 +138,8 @@ router.get("/leaderboard", (req, res) => {
             }
         })
     })
+
+
 })
 
 module.exports = router

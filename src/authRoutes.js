@@ -12,14 +12,14 @@ router.post("/register", async (req, res) => {
     const salt = await bcrypt.genSalt()
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
     db.getConnection(async (err, connection) => {
-        if (err) throw (err)
+        if (err) return res.sendStatus(500)
         const sqlSearch = "SELECT * FROM users WHERE email = ? or username = ?"
         const search_query = mysql.format(sqlSearch, [email, username])
         const sqlInsert = "INSERT INTO users VALUES (0,?,?,?,?)"
         const insert_query = mysql.format(sqlInsert, [username, email, hashedPassword, new Date()])
 
         await connection.query(search_query, async (err, result) => {
-            if (err) throw (err)
+            if (err) return res.sendStatus(500)
             console.log("------> Search Results")
             console.log(result.length)
             if (result.length != 0) {
@@ -41,7 +41,7 @@ router.post("/register", async (req, res) => {
             else {
                 await connection.query(insert_query, (err, result) => {
                     connection.release()
-                    if (err) throw (err)
+                    if (err) return res.sendStatus(500)
                     console.log("--------> Created new User")
                     console.log(result.insertId)
                     res.sendStatus(201)
@@ -55,13 +55,13 @@ router.post("/login", (req, res) => {
     const email = req.body.email
     const password = req.body.password
     db.getConnection(async (err, connection) => {
-        if (err) throw (err)
+        if (err) return res.sendStatus(500)
         const sqlSearch = "Select * from users where email = ?"
         const search_query = mysql.format(sqlSearch, [email])
         await connection.query(search_query, async (err, result) => {
             connection.release()
 
-            if (err) throw (err)
+            if (err) return res.sendStatus(500)
             if (result.length == 0) {
                 console.log("--------> User does not exist")
                 res.status(404).send({ message: "User not found." })
@@ -88,13 +88,12 @@ router.post("/login", (req, res) => {
 router.post("/forgot-password", async (req, res) => {
     const email = req.body.email
     db.getConnection(async (err, connection) => {
-        if (err) throw (err)
+        if (err) return res.sendStatus(500)
         const sqlSearch = "Select * from users where email = ?"
         const search_query = mysql.format(sqlSearch, [email])
         await connection.query(search_query, async (err, result) => {
             connection.release()
-
-            if (err) throw (err)
+            if (err) return res.sendStatus(500)
             if (result.length == 0) {
                 console.log("--------> User does not exist")
                 res.status(404).send({ message: "User not found." })
@@ -103,7 +102,7 @@ router.post("/forgot-password", async (req, res) => {
                 const token = accessToken.generateAccessToken({ email, id: result[0].id }, "1h")
                 const resetLink = `${process.env.CLIENT_URL}/password-reset/${token}?email=${email}`
                 try {
-                    const info = await transporter.sendForgotPasswordEmail(email, result[0].username, resetLink)
+                    await transporter.sendForgotPasswordEmail(email, result[0].username, resetLink)
                     console.log("--------> Email sent")
                     res.send({ message: "Email sent." })
                 } catch (error) {
@@ -123,14 +122,14 @@ router.post("/reset-password", accessToken.validateToken, async (req, res) => {
         res.status(403).send({ message: "User Not Found." })
     } else {
         db.getConnection(async (err, connection) => {
-            if (err) throw (err)
+            if (err) return res.sendStatus(500)
             const salt = await bcrypt.genSalt()
             const hashedPassword = await bcrypt.hash(password, salt);
             const sqlUpdate = "UPDATE users SET password = ? WHERE email = ?"
             const update_query = mysql.format(sqlUpdate, [hashedPassword, email])
 
             await connection.query(update_query, async (err, result) => {
-                if (err) throw (err)
+                if (err) return res.sendStatus(500)
                 console.log("------> Record Updated")
                 connection.release()
                 res.send({ message: "Password Updated" })
