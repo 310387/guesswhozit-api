@@ -121,8 +121,16 @@ router.get("/leaderboard", (req, res) => {
     const dbName = getDBName(category)
     db.getConnection(async (err, connection) => {
         if (err) return res.sendStatus(500)
-        const sqlSearch = "SELECT users.username, ??.?? FROM ?? INNER JOIN users WHERE ??.user_id = users.id AND ??.game_count > 10 ORDER BY ??.?? DESC LIMIT 5"
-        const search_query = mysql.format(sqlSearch, [dbName, type, dbName, dbName, dbName, dbName, type])
+        let sqlSearch = ""
+        let search_query = ""
+        if (type === "win_rate") {
+            sqlSearch = "SELECT users.username, (??.win_count/??.game_count)*100 as win_rate FROM ?? INNER JOIN users WHERE ??.user_id = users.id AND ??.game_count > 10 AND ??.win_count > 0 ORDER BY (??.win_count/??.game_count)*100 DESC LIMIT 5"
+            search_query = mysql.format(sqlSearch, [dbName, dbName, dbName, dbName, dbName, dbName, dbName, dbName])
+        } else {
+            sqlSearch = "SELECT users.username, ??.?? FROM ?? INNER JOIN users WHERE ??.user_id = users.id AND ??.game_count > 10 ORDER BY ??.?? DESC LIMIT 5"
+            search_query = mysql.format(sqlSearch, [dbName, type, dbName, dbName, dbName, dbName, type])
+        }
+
 
         await connection.query(search_query, async (err, result) => {
             connection.release()
