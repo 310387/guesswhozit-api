@@ -131,7 +131,6 @@ router.get("/leaderboard", (req, res) => {
             search_query = mysql.format(sqlSearch, [dbName, type, dbName, dbName, dbName, dbName, type])
         }
 
-
         await connection.query(search_query, async (err, result) => {
             connection.release()
             if (err) return res.sendStatus(500)
